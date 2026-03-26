@@ -1,0 +1,127 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "milksales.smartclaims.claims",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "crossNavigation": {
+            "inbounds": {
+                "Claims-manage": {
+                    "semanticObject": "Claims",
+                    "action": "manage",
+                    "title": "{{flpTitle}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/odata/v4/claim/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "sap-icon://warning2"
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.ushell": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "milksales.smartclaims.claims.i18n.i18n",
+                    "supportedLocales": [""],
+                    "fallbackLocale": ""
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            }
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "ClaimsList",
+                    "target": "ClaimsList"
+                },
+                {
+                    "pattern": "Claims({key}):?query:",
+                    "name": "ClaimsObjectPage",
+                    "target": "ClaimsObjectPage"
+                }
+            ],
+            "targets": {
+                "ClaimsList": {
+                    "type": "Component",
+                    "id": "ClaimsList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/Claims",
+                            "variantManagement": "Page",
+                            "navigation": {
+                                "Claims": {
+                                    "detail": {
+                                        "route": "ClaimsObjectPage"
+                                    }
+                                }
+                            },
+                            "initialLoad": "Enabled"
+                        }
+                    }
+                },
+                "ClaimsObjectPage": {
+                    "type": "Component",
+                    "id": "ClaimsObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/Claims",
+                            "editableHeaderContent": false
+                        }
+                    }
+                }
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        }
+    }
+}

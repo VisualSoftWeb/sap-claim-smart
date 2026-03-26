@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Claims</title>
+
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m, sap.fe.templates, sap.ui.core"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="allow"
+        data-sap-ui-xx-componentPreload="off"
+        data-sap-ui-resourceroots='{ "milksales.smartclaims.claims": "./" }'>
+    </script>
+
+    <script>
+        sap.ui.require([
+            "sap/ui/core/ComponentContainer"
+        ], function(ComponentContainer) {
+            new ComponentContainer({
+                name: "milksales.smartclaims.claims",
+                settings: {},
+                async: true,
+                height: "100%",
+                width: "100%"
+            }).placeAt("content");
+        });
+    </script>
+
+    <!-- ===== WebMCP Native Integration ===== -->
+    <script>
+        /**
+         * WebMCP Native API (Chrome EPP)
+         * Requires Chrome 146+ with WebMCP flag or compatible agent.
+         */
+        async function setupNativeMCP() {
+            if (typeof navigator.modelContext === 'undefined') {
+                console.warn('[WebMCP] navigator.modelContext NOT FOUND. Make sure you are using Chrome Canary with WebMCP flag enabled.');
+                return;
+            }
+
+            const ctx = navigator.modelContext;
+            const SERVICE_URL = '/odata/v4/claim';
+
+            console.log('[WebMCP] Native API detected. Registering tools...');
+
+            // ──────────────────────────────────────────
+            // Tool 1: Listar Claims
+            // ──────────────────────────────────────────
+            ctx.registerTool({
+                name: 'listClaims',
+                description: 'Lista todas as solicitações de avaria com status, motorista, cliente e valor',
+                parameters: { type: 'object', properties: {} },
+                execute: async () => {
+                    const res = await fetch(SERVICE_URL + '/Claims?$orderby=createdAt desc');
+                    const data = await res.json();
+                    const rows = (data.value || []).map(c =>
+                        `• [${c.status}] ${c.customerName} — Motorista: ${c.driverName}, R$${c.totalAmount} (${c.deliveryDate})`
+                    ).join('\n');
+                    return rows || 'Nenhuma solicitação encontrada.';
+                }
+            });
+
+            // ──────────────────────────────────────────
+            // Tool 2: Ver Detalhes
+            // ──────────────────────────────────────────
+            ctx.registerTool({
+                name: 'getClaimDetails',
+                description: 'Obtém detalhes completos de uma solicitação específica, incluindo itens avariados',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        claimID: { type: 'string', description: 'ID (UUID) da solicitação' }
+                    },
+                    required: ['claimID']
+                },
+                execute: async (args) => {
+                    const res = await fetch(SERVICE_URL + `/Claims(${args.claimID})?$expand=items`);
+                    if (!res.ok) return 'Solicitação não encontrada.';
+                    const c = await res.json();
+                    const items = (c.items || []).map(i =>
+                        `  - ${i.description} (${i.quantity} ${i.uom}) — Motivo: ${i.reason}, Lote: ${i.batchNumber}`
+                    ).join('\n');
+                    return [
+                        `Claim: ${c.ID}`,
+                        `Status: ${c.status}`,
+                        `Motorista: ${c.driverName}`,
+                        `Cliente: ${c.customerName}`,
+                        `Data Entrega: ${c.deliveryDate}`,
+                        `Valor Total: R$${c.totalAmount}`,
+                        `Itens Avariados:\n${items || '  (nenhum)'}`
+                    ].join('\n');
+                }
+            });
+
+            // ──────────────────────────────────────────
+            // Tool 3: Registrar Avaria
+            // ──────────────────────────────────────────
+            ctx.registerTool({
+                name: 'registerDamage',
+                description: 'Registra uma nova solicitação de avaria com cliente, motorista e lista de itens',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        driverName:   { type: 'string', description: 'Nome do motorista' },
+                        customerName: { type: 'string', description: 'Nome do cliente' },
+                        deliveryDate: { type: 'string', description: 'Data da entrega (AAAA-MM-DD)' },
+                        totalAmount:  { type: 'number', description: 'Valor total em R$' },
+                        items: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    productID:   { type: 'string' },
+                                    description: { type: 'string' },
+                                    quantity:    { type: 'integer' },
+                                    uom:         { type: 'string' },
+                                    reason:      { type: 'string' },
+                                    batchNumber: { type: 'string' }
+                                }
+                            }
+                        }
+                    },
+                    required: ['driverName', 'customerName', 'deliveryDate', 'totalAmount']
+                },
+                execute: async (args) => {
+                    const body = {
+                        driverName:   args.driverName,
+                        customerName: args.customerName,
+                        deliveryDate: args.deliveryDate,
+                        totalAmount:  args.totalAmount,
+                        items:        args.items || []
+                    };
+                    const res = await fetch(SERVICE_URL + '/Claims', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (!res.ok) {
+                        const err = await res.text();
+                        throw new Error(`Erro ao criar solicitação: ${err}`);
+                    }
+                    const created = await res.json();
+                    return `Solicitação criada com sucesso!\nID: ${created.ID}\nStatus: ${created.status}`;
+                }
+            });
+
+            // ──────────────────────────────────────────
+            // Tool 4: Aprovar Claim
+            // ──────────────────────────────────────────
+            ctx.registerTool({
+                name: 'approveClaim',
+                description: 'Aprova uma solicitação pendente e gera a Ordem de Retorno no SD',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        claimID: { type: 'string', description: 'UUID da solicitação' }
+                    },
+                    required: ['claimID']
+                },
+                execute: async (args) => {
+                    const res = await fetch(
+                        SERVICE_URL + `/Claims(${args.claimID})/ClaimService.approveClaim`,
+                        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+                    );
+                    if (!res.ok) throw new Error('Falha ao aprovar no backend.');
+                    return `Solicitação ${args.claimID} aprovada e enviada para o SD.`;
+                }
+            });
+
+            console.log('[WebMCP] ✅ Ferramentas registradas via navigator.modelContext');
+        }
+
+        window.addEventListener('load', setupNativeMCP);
+    </script>
+
+    <style>
+        html, body, #content {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="sapUiBody" id="content"></body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Smart Claims - Portal do Motorista</title>
+
+    <script id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-libs="sap.m, sap.fe.templates, sap.ui.core"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="allow"
+        data-sap-ui-xx-componentPreload="off"
+        data-sap-ui-resourceroots='{ "milksales.smartclaims.motorista": "./" }'>
+    </script>
+
+    <script>
+        sap.ui.require([
+            "sap/ui/core/ComponentContainer"
+        ], function(ComponentContainer) {
+            new ComponentContainer({
+                name: "milksales.smartclaims.motorista",
+                settings: {},
+                async: true,
+                height: "100%",
+                width: "100%"
+            }).placeAt("content");
+        });
+    </script>
+
+    <!-- WebMCP Integration for Driver (Voice Commands) -->
+    <script>
+        async function setupDriverMCP() {
+            // Tenta obter o contexto com retentativas para evitar 'undefined' na carga inicial
+            let ctx = navigator.modelContext;
+            let retries = 0;
+            while (!ctx && retries < 10) {
+                await new Promise(r => setTimeout(r, 500));
+                ctx = navigator.modelContext;
+                retries++;
+            }
+
+            if (!ctx) {
+                console.warn('[WebMCP] Contexto não encontrado após várias tentativas.');
+                return;
+            }
+            
+            console.log('[WebMCP] Motorista API Ativa');
+
+            // Tool: Criar Avaria (Shortcut)
+            ctx.registerTool({
+                name: 'reportDamageShortcut',
+                description: 'Cria rapidamente um rascunho de avaria informando o cliente e motorista',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        customer: { type: 'string', description: 'Nome do cliente' },
+                        driver: { type: 'string', description: 'Nome do motorista' }
+                    },
+                    required: ['customer']
+                },
+                execute: async (args) => {
+                    const res = await fetch('/odata/v4/driver/Claims', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            customerName: args.customer,
+                            driverName: args.driver || 'Motorista Logado',
+                            status: 'PENDING',
+                            deliveryDate: new Date().toISOString().split('T')[0]
+                        })
+                    });
+                    const data = await res.json();
+                    return `Rascunho criado para ${args.customer}. ID: ${data.ID}. Agora você pode tirar as fotos.`;
+                }
+            });
+
+            // Tool 2: Resumir Minhas Avarias
+            ctx.registerTool({
+                name: 'summarizeClaims',
+                description: 'Lista e resume as últimas avarias registradas pelo motorista',
+                parameters: { type: 'object', properties: {} },
+                execute: async () => {
+                    const res = await fetch('/odata/v4/driver/Claims?$top=5&$orderby=createdAt desc');
+                    const data = await res.json();
+                    if (!data.value || data.value.length === 0) return "Você não possui avarias registradas recentemente.";
+                    
+                    const list = data.value.map(c => `- Cliente: ${c.customerName}, Status: ${c.status}, Data: ${c.deliveryDate}`).join('\n');
+                    return `Aqui estão suas últimas 5 avarias:\n${list}`;
+                }
+            });
+
+            console.log('[WebMCP] ✅ Ferramentas (reportDamage, summarizeClaims) registradas com sucesso.');
+        }
+        window.addEventListener('load', setupDriverMCP);
+    </script>
+
+    <style>
+        html, body, #content { height: 100%; margin: 0; padding: 0; background-color: #f7f7f7; }
+        .sapUiBody { font-family: "72", "72full", Arial, Helvetica, sans-serif; }
+    </style>
+</head>
+<body class="sapUiBody sapUiSizeCozy" id="content"></body>
+</html>

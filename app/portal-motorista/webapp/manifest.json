@@ -1,0 +1,102 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "milksales.smartclaims.motorista",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "title": "Smart Claims",
+        "description": "Smart Claims",
+        "dataSources": {
+            "mainService": {
+                "uri": "/odata/v4/driver/",
+                "type": "OData",
+                "settings": {
+                    "odataVersion": "4.0"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.120.0",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "milksales.smartclaims.motorista.i18n.i18n",
+                    "supportedLocales": [""],
+                    "fallbackLocale": ""
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            }
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "ClaimsList",
+                    "target": "ClaimsList"
+                },
+                {
+                    "pattern": "Claims({key}):?query:",
+                    "name": "ClaimsObjectPage",
+                    "target": "ClaimsObjectPage"
+                }
+            ],
+            "targets": {
+                "ClaimsList": {
+                    "type": "Component",
+                    "id": "ClaimsList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/Claims",
+                            "variantManagement": "None",
+                            "initialLoad": "Enabled"
+                        }
+                    }
+                },
+                "ClaimsObjectPage": {
+                    "type": "Component",
+                    "id": "ClaimsObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/Claims",
+                            "editableHeaderContent": true
+                        }
+                    }
+                }
+            }
+        },
+        "contentDensities": {
+            "compact": false,
+            "cozy": true
+        }
+    }
+}

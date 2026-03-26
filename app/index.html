@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Claims - Início</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        h1 { color: #2c3e50; margin-bottom: 30px; }
+        .container { display: flex; gap: 20px; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 250px; transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .card h2 { color: #3498db; margin-top: 0; }
+        .card p { color: #7f8c8d; }
+        .btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #3498db; color: white; border-radius: 5px; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Smart Claims</h1>
+    <div class="container">
+        <a href="/portal-motorista/webapp/index.html" class="card">
+            <h2>🚚 Motorista</h2>
+            <p>Registro rápido de avarias e consultas via voz.</p>
+            <span class="btn">Acessar</span>
+        </a>
+        <a href="/claims/webapp/index.html" class="card">
+            <h2>🏢 Backoffice</h2>
+            <p>Gestão e aprovação de solicitações de avaria.</p>
+            <span class="btn">Acessar</span>
+        </a>
+    </div>
+</body>
+</html>
