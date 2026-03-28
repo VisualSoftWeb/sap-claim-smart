@@ -19,6 +19,7 @@ entity ClaimItems : cuid {
     productID     : String(40);
     description   : String(255);
     quantity      : Integer;
+    price         : Decimal(15, 2) default 1.00;
     uom           : String(3);
     reason        : String(100); // DAMAGED, LEAKING, EXPIRED
     batchNumber   : String(20);

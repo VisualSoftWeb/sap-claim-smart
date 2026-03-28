@@ -4,46 +4,59 @@ module.exports = class DriverService extends cds.ApplicationService {
     async init() {
         const { Claims, ClaimItems } = this.entities;
 
-        // ---------- Cálculo Automático do Valor Total ----------
-        this.before('SAVE', Claims, async (req) => {
-            // Se items for vazio no payload (req.data), tentamos ler da tabela de rascunho
-            let items = req.data.items;
-            if (!items) {
-                items = await SELECT.from(ClaimItems.drafts).where({ parent_ID: req.data.ID });
-                req.data.items = items; // Alimenta para o SAVE processar se necessário
-            }
-
-            if (!items || items.length === 0) {
-                req.error(400, 'É necessário informar pelo menos um item para registrar a avaria.', 'in/items');
-                return;
-            }
-
-            // Calcula o total (Simulação: R$ 50,00 por unidade avariada)
+        // ---------- Cálculo do Valor Total (Side Effect / Pré-Save) ----------
+        // Centralizamos o cálculo para garantir consistência
+        const _updateTotal = async (parent_ID) => {
+            if (!parent_ID) return;
+            const items = await SELECT.from(ClaimItems.drafts).where({ parent_ID });
             let total = 0;
             items.forEach(item => {
-                total += (item.quantity || 0) * 50.00; 
+                const qty = Number(item.quantity) || 0;
+                const prc = (item.price === null || item.price === undefined) ? 1.00 : Number(item.price);
+                total += qty * prc;
             });
-            req.data.totalAmount = total;
+            await UPDATE(Claims.drafts).set({ totalAmount: total }).where({ ID: parent_ID });
+            console.log(`[DRIVER-SERVICE] Total recalculado para rascunho ${parent_ID}: R$ ${total}`);
+        };
 
-            console.log(`[CÁLCULO] Valor total da avaria ${req.data.ID} calculado em R$ ${total}`);
+        // Resposta dinâmica ao alterar itens
+        this.after(['PATCH', 'CREATE', 'DELETE'], ClaimItems, async (data, req) => {
+            if (req.target.drafts) {
+                const parent_ID = data.parent_ID || req.data.parent_ID || (req.params[0] && req.params[0].ID);
+                await _updateTotal(parent_ID);
+            }
         });
 
-        // ---------- Log de Lançamento (Ativação) ----------
+        // Garantia final antes de salvar
+        this.before('SAVE', Claims, async (req) => {
+            const { ID } = req.data;
+            const items = await SELECT.from(ClaimItems.drafts).where({ parent_ID: ID });
+            if (items.length > 0) {
+                let total = 0;
+                items.forEach(item => { 
+                    const qty = Number(item.quantity) || 0;
+                    const prc = (item.price === null || item.price === undefined) ? 1.00 : Number(item.price);
+                    total += qty * prc;
+                });
+                req.data.totalAmount = total;
+            }
+        });
+
+        // ---------- Log de Sucesso ----------
         this.after('SAVE', Claims, (data) => {
-            console.log(`[MOTORISTA] Avaria ${data.ID} lançada com sucesso para o cliente ${data.customerName}`);
+            console.log(`[MOTORISTA] Avaria ${data.ID} registrada com sucesso.`);
         });
 
-        // ---------- Virtual field: statusCriticality ----------
-        // Mesma lógica do ClaimService para manter consistência visual
+        // ---------- Visibilidade de Status (Criticality) ----------
         this.after('READ', Claims, (data) => {
             const items = Array.isArray(data) ? data : [data];
             for (const claim of items) {
                 if (!claim) continue;
                 switch (claim.status) {
-                    case 'APPROVED':  claim.statusCriticality = 3; break; // Green
-                    case 'REJECTED':  claim.statusCriticality = 1; break; // Red
-                    case 'COMPLETED': claim.statusCriticality = 3; break; // Green
-                    default:          claim.statusCriticality = 2; break; // Yellow (PENDING)
+                    case 'APPROVED':  claim.statusCriticality = 3; break; 
+                    case 'REJECTED':  claim.statusCriticality = 1; break; 
+                    case 'COMPLETED': claim.statusCriticality = 3; break; 
+                    default:          claim.statusCriticality = 2; break; 
                 }
             }
         });

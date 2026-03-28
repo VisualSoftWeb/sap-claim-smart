@@ -6,6 +6,19 @@
         "i18n": "i18n/i18n.properties",
         "title": "Smart Claims",
         "description": "Smart Claims",
+        "crossNavigation": {
+            "inbounds": {
+                "SmartClaims-manage": {
+                    "semanticObject": "SmartClaims",
+                    "action": "manage",
+                    "title": "Portal do Motorista",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        },
         "dataSources": {
             "mainService": {
                 "uri": "/odata/v4/driver/",
@@ -77,7 +90,14 @@
                         "settings": {
                             "contextPath": "/Claims",
                             "variantManagement": "None",
-                            "initialLoad": "Enabled"
+                            "initialLoad": "Enabled",
+                            "navigation": {
+                                "Claims": {
+                                    "detail": {
+                                        "route": "ClaimsObjectPage"
+                                    }
+                                }
+                            }
                         }
                     }
                 },

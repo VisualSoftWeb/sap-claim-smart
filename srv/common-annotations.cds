@@ -6,6 +6,34 @@ using { ClaimService } from './claim-service';
 // ############################################################################
 
 annotate DriverService.Claims with @(
+    Capabilities.Insertable: true,
+    Capabilities.Updateable: true,
+    Capabilities.Deleteable: true
+);
+
+annotate DriverService.Claims with {
+    items @Capabilities.InsertRestrictions.Insertable: true;
+    attachments @Capabilities.InsertRestrictions.Insertable: true;
+};
+
+annotate DriverService.ClaimItems with @(
+    Capabilities.Insertable: true,
+    Capabilities.Updateable: true,
+    Capabilities.Deleteable: true
+);
+
+annotate DriverService.Attachments with @(
+    Capabilities.Insertable: true,
+    Capabilities.Updateable: true,
+    Capabilities.Deleteable: true,
+    UI.HeaderInfo: {
+        TypeName: 'Foto da Avaria',
+        TypeNamePlural: 'Fotos da Avaria',
+        Title: { Value: fileName }
+    }
+);
+
+annotate DriverService.Claims with @(
     UI.LineItem: [
         { $Type: 'UI.DataField', Value: ID, Label: 'ID Avaria' },
         { $Type: 'UI.DataField', Value: status, Label: 'Status', Criticality: statusCriticality },
@@ -41,6 +69,7 @@ annotate DriverService.ClaimItems with @(
         { Value: productID, Label: 'Produto' },
         { Value: description, Label: 'Descrição' },
         { Value: quantity, Label: 'Qtd' },
+        { Value: price, Label: 'Valor Unit.' },
         { Value: uom, Label: 'Un' },
         { Value: reason, Label: 'Motivo' }
     ]
@@ -55,8 +84,13 @@ annotate DriverService.Attachments with @(
 );
 
 annotate DriverService.Attachments with {
-    content @Core.ContentDisposition.Type: 'inline';
-    mediaType @UI.Hidden;
+    content @(
+        Core.ContentDisposition.Type: 'inline',
+        Core.ContentDisposition.Filename: fileName,
+        Core.MediaType: mediaType
+    );
+    mediaType @(UI.Hidden, Core.IsMediaType: true);
+    fileName @(Common.FieldControl: #Mandatory);
     size @UI.Hidden;
     url @UI.Hidden;
 };
@@ -70,12 +104,12 @@ annotate DriverService.ClaimItems with {
             { $Type: 'Common.ValueListParameterOut', LocalDataProperty: uom, ValueListProperty: 'uom' }
         ]
     };
-    reason @Common.ValueList: {
-        CollectionPath: 'ClaimItems',
-        Parameters: [
-            { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'reason' }
-        ]
-    };
+};
+
+// Side Effects para atualizar o valor total quando o item muda
+annotate DriverService.ClaimItems with @Common.SideEffects: {
+    SourceProperties: [ quantity, price ],
+    TargetProperties: [ 'parent/totalAmount' ]
 };
 
 // ############################################################################
@@ -109,8 +143,18 @@ annotate ClaimService.Claims with @(
     ]
 );
 
-annotate ClaimService.Claims.approveClaim with @Core.OperationAvailable: { $edmJson: { $Eq: [{ $Path: 'in/status' }, 'PENDING'] } };
-annotate ClaimService.Claims.rejectClaim with @Core.OperationAvailable: { $edmJson: { $Eq: [{ $Path: 'in/status' }, 'PENDING'] } };
+// Controle de visibilidade das ações
+annotate ClaimService.Claims actions {
+    approveClaim @Core.OperationAvailable: { $edmJson: { $Eq: [{ $Path: 'in/status' }, 'PENDING'] } }
+                 @Common.SideEffects: {
+                     TargetProperties: [ 'in/status', 'in/statusCriticality' ],
+                     TargetEntities: [ 'in/returnOrders' ]
+                 };
+    rejectClaim  @Core.OperationAvailable: { $edmJson: { $Eq: [{ $Path: 'in/status' }, 'PENDING'] } }
+                 @Common.SideEffects: {
+                     TargetProperties: [ 'in/status', 'in/statusCriticality' ]
+                 };
+}
 
 annotate ClaimService.ClaimItems with @(
     UI.LineItem: [
@@ -121,6 +165,26 @@ annotate ClaimService.ClaimItems with @(
         { Value: reason, Label: 'Motivo' }
     ]
 );
+
+annotate ClaimService.Attachments with @(
+    UI.LineItem: [
+        { Value: content, Label: 'Foto' },
+        { Value: fileName, Label: 'Arquivo' },
+        { Value: createdAt, Label: 'Data/Hora' }
+    ]
+);
+
+annotate ClaimService.Attachments with {
+    content @(
+        Core.ContentDisposition.Type: 'inline',
+        Core.ContentDisposition.Filename: fileName,
+        Core.MediaType: mediaType
+    );
+    mediaType @(UI.Hidden, Core.IsMediaType: true);
+    fileName @(Common.FieldControl: #Mandatory);
+    size @UI.Hidden;
+    url @UI.Hidden;
+};
 
 annotate ClaimService.ReturnOrders with @(
     UI.HeaderInfo: {

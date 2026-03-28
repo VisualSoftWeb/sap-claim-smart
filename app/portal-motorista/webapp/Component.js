@@ -12,11 +12,8 @@ sap.ui.define(
                 // call the base component's init function
                 Component.prototype.init.apply(this, arguments);
 
-                // enable routing
-                this.getRouter().initialize();
-
                 // Set Title
-                document.title = "Smart Claims";
+                document.title = "Smart Claims - Motorista";
             }
         });
     }
