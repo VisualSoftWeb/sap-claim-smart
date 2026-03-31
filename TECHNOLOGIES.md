@@ -11,6 +11,9 @@ Este projeto é uma solução moderna baseada no ecossistema SAP para gestão de
 
 ## Frontend
 - **SAP UI5 (Fiori Elements)**: Framework de interface de usuário para criação de aplicativos empresariais consistentes e responsivos.
+- **Custom Extensions**: 
+  - **Controller Extensions**: Lógica customizada integrada ao ciclo de vida da ListReport e ObjectPage.
+  - **XML Fragments**: Diálogos nativos (`sap.m.Dialog`) para interface de chat assistida.
 - **Standard Templates**: 
   - **List Report**: Para visualização e filtragem de grandes listas de avarias.
   - **Object Page**: Para detalhamento, edição e upload de anexos de uma avaria específica.
@@ -23,8 +26,12 @@ Este projeto é uma solução moderna baseada no ecossistema SAP para gestão de
 - **Automação de Dados**: Preenchimento automático de campos utilizando Smart ValueHelp e lógica de negócio do lado do servidor (CDS hooks).
 
 ## Inteligência Artificial & Agent Readiness
-- **WebMCP Protocol (Google)**: Implementação do novo protocolo do Google para tornar a aplicação visível e compreensível por agentes de IA.
-- **Agent Ready**: A aplicação foi projetada para que assistentes inteligentes possam navegar, extrair informações e realizar ações (como criar avarias) através da integração com o WebMCP, tornando-a uma "AI-First Enterprise App".
+- **WebMCP Protocol (Google)**: Implementação do protocolo para tornar a aplicação "Agent-Ready". Foram implementadas 3 ferramentas principais:
+  - `iniciarAvaria`: Criação de registros com busca automática de cliente.
+  - `adicionarItem`: Inserção de itens com busca inteligente de produto via OData.
+  - `finalizarEResumir`: Cálculo e encerramento do fluxo de voz.
+- **Web Speech API**: Integração nativa com reconhecimento de voz do navegador para suporte a comandos de voz em Português (pt-BR).
+- **AI-First UX**: A interface permite que o motorista opere o sistema sem toque, ideal para ambientes logísticos onde o registro rápido e mãos-livres é essencial.
 
 ## Arquitetura e Estratégia SAP (Clean Core)
 Este projeto é um exemplo prático da nova visão de modernização da SAP:

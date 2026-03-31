@@ -41,12 +41,14 @@ module.exports = class ClaimService extends cds.ApplicationService {
 
             // 4. Integração SD (Simulada): Criar Ordem de Retorno
             const sdOrderNumber = 'RE' + Math.floor(Math.random() * 900000 + 100000);
-            const returnOrderInsert = await INSERT.into(ReturnOrders).entries({
+            const returnOrderID = cds.utils.uuid(); // Gerar ID manualmente para garantir vinculação
+            
+            await INSERT.into(ReturnOrders).entries({
+                ID: returnOrderID,
                 claim_ID: claimID,
                 sdOrderNumber: sdOrderNumber,
                 orderType: 'RE'
             });
-            const returnOrderID = returnOrderInsert.results[0].ID;
 
             console.log(`[SD INTEGRATION] Ordem de Retorno ${sdOrderNumber} (ID: ${returnOrderID}) criada para Avaria ${claimID}`);
 
@@ -83,7 +85,7 @@ module.exports = class ClaimService extends cds.ApplicationService {
             const claim = await SELECT.one.from(Claims).where({ ID: claimID });
             if (!claim) return req.error(404, 'Claim not found');
 
-            await UPDATE(Claims).set({ status: 'REJECTED' }).where({ ID: claimID });
+            await UPDATE(Claims).set({ status: 'REJECTED', rejectionReason: reason || 'Sem motivo informado' }).where({ ID: claimID });
             console.log(`[WORKFLOW] Claim ${claimID} rejected. Reason: ${reason}`);
             return SELECT.one.from(Claims).where({ ID: claimID });
         });

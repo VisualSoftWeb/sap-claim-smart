@@ -38,7 +38,8 @@ annotate DriverService.Claims with @(
         { $Type: 'UI.DataField', Value: ID, Label: 'ID Avaria' },
         { $Type: 'UI.DataField', Value: status, Label: 'Status', Criticality: statusCriticality },
         { $Type: 'UI.DataField', Value: customerName, Label: 'Cliente' },
-        { $Type: 'UI.DataField', Value: deliveryDate, Label: 'Data Entrega' }
+        { $Type: 'UI.DataField', Value: deliveryDate, Label: 'Data Entrega' },
+        { $Type: 'UI.DataField', Value: rejectionReason, Label: 'Motivo Rejeição' }
     ],
     UI.HeaderInfo: {
         TypeName: 'Avaria', TypeNamePlural: 'Minhas Entregas',
@@ -46,6 +47,7 @@ annotate DriverService.Claims with @(
     },
     UI.Facets: [
         { $Type: 'UI.ReferenceFacet', Label: 'Informações Básicas', Target: '@UI.FieldGroup#BasicInfo' },
+        { $Type: 'UI.ReferenceFacet', Label: 'Motivo da Rejeição', Target: '@UI.FieldGroup#RejectionInfo', ![@UI.Hidden]: { $edmJson: { $Ne: [{ $Path: 'status' }, 'REJECTED'] } } },
         { $Type: 'UI.ReferenceFacet', Label: 'Itens Avariados', Target: 'items/@UI.LineItem' },
         { $Type: 'UI.ReferenceFacet', Label: 'Fotos da Avaria', Target: 'attachments/@UI.LineItem' }
     ],
@@ -56,12 +58,18 @@ annotate DriverService.Claims with @(
             { Value: deliveryDate, Label: 'Data' },
             { Value: totalAmount, Label: 'Valor Estimado' }
         ]
+    },
+    UI.FieldGroup #RejectionInfo: {
+        Data: [
+            { Value: rejectionReason, Label: 'Motivo da Rejeição' }
+        ]
     }
 );
 
 annotate DriverService.Claims with {
     customerName @Common.FieldControl: #Mandatory;
     deliveryDate @Common.FieldControl: #Mandatory;
+    rejectionReason @Common.FieldControl: #ReadOnly @UI.MultiLineText;
 };
 
 annotate DriverService.ClaimItems with @(
@@ -134,7 +142,8 @@ annotate ClaimService.Claims with @(
     ],
     UI.FieldGroup #Main: {
         Data: [
-            { Value: driverName }, { Value: customerName }, { Value: deliveryDate }
+            { Value: driverName }, { Value: customerName }, { Value: deliveryDate },
+            { Value: rejectionReason, Label: 'Motivo da Rejeição' }
         ]
     },
     UI.Identification: [

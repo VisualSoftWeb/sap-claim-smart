@@ -11,6 +11,7 @@ entity Claims : cuid, managed {
     totalAmount        : Decimal(15, 2);
     items              : Composition of many ClaimItems on items.parent = $self;
     attachments        : Composition of many Attachments on attachments.parent = $self;
+    rejectionReason    : String(500);
     returnOrders       : Association to many ReturnOrders on returnOrders.claim = $self;
 }
 
@@ -52,8 +53,10 @@ entity CreditMemos : cuid, managed {
     amount        : Decimal(15, 2);
 }
 
+
 entity Products : cuid {
     productID     : String(40);
     description   : String(255);
     uom           : String(3);
 }
+

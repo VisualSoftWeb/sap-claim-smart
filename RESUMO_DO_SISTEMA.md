@@ -10,6 +10,7 @@ Tradicionalmente, quando um produto chega avariado ao cliente, o processo é man
 ## O que o Sistema Faz (Fluxo de Valor)
 
 ### 1. Portal do Motorista
+*   **Assistente IA (Voz & Chat)**: Registro de avarias mãos-livres via comandos de voz em Português ou chat interativo, totalmente integrado à interface Fiori.
 *   **Registro Imediato**: O motorista registra a avaria no momento da entrega via dispositivo móvel.
 *   **Evidências**: Permite o upload de fotos da mercadoria batida/estragada.
 *   **Cálculo Automático**: O sistema já estima o prejuízo baseado nas quantidades informadas.
@@ -31,5 +32,6 @@ O grande diferencial do aplicativo é o que acontece no momento da aprovação. 
 
 ## Tecnologias Utilizadas
 *   **Backend**: SAP CAP (Cloud Application Programming Model) em Node.js.
-*   **Frontend**: SAP Fiori Elements (UX padrão SAP).
+*   **Frontend**: SAP Fiori Elements (UX padrão SAP) com extensões nativas (Fragments & Controllers).
+*   **IA & Agentes**: Protocolo **WebMCP** (Google) para integração de ferramentas com assistentes inteligentes e **Web Speech API** para comando de voz.
 *   **Simulação ERP**: Entidades dedicadas para espelhar o comportamento do S/4HANA.

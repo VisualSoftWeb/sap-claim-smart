@@ -30,48 +30,6 @@
         });
     </script>
 
-    <!-- WebMCP (Voice Integration) for Senior Driver Experience -->
-    <script>
-        async function setupSeniorMCP() {
-            let ctx = navigator.modelContext;
-            let retries = 0;
-            while (!ctx && retries < 10) {
-                await new Promise(r => setTimeout(r, 500));
-                ctx = navigator.modelContext;
-                retries++;
-            }
-            if (!ctx) return;
-            
-            ctx.registerTool({
-                name: 'criarNovaAvaria',
-                description: 'Cria rapidamente um rascunho de avaria informando o cliente e o motorista.',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        cliente: { type: 'string' },
-                        motorista: { type: 'string' }
-                    },
-                    required: ['cliente']
-                },
-                execute: async (args) => {
-                    const res = await fetch('/odata/v4/driver/Claims', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            customerName: args.cliente,
-                            driverName: args.motorista || 'Motorista Logado',
-                            status: 'PENDING',
-                            deliveryDate: new Date().toISOString().split('T')[0]
-                        })
-                    });
-                    const data = await res.json();
-                    return `Avaria criada com sucesso para ${args.cliente}. ID: ${data.ID}. Recarregue a lista para ver o rascunho.`;
-                }
-            });
-        }
-        window.addEventListener('load', setupSeniorMCP);
-    </script>
-
     <style>
         html, body, #content {
             height: 100%;

@@ -91,6 +91,20 @@
                             "contextPath": "/Claims",
                             "variantManagement": "None",
                             "initialLoad": "Enabled",
+                            "controlConfiguration": {
+                                "@com.sap.vocabularies.UI.v1.LineItem": {
+                                    "actions": {
+                                        "AssistantAction": {
+                                            "text": "Assistente IA",
+                                            "press": "milksales.smartclaims.motorista.ext.controller.AssistantExtension.onAssistantPress",
+                                            "headerAction": true,
+                                            "position": {
+                                                "placement": "After"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             "navigation": {
                                 "Claims": {
                                     "detail": {
