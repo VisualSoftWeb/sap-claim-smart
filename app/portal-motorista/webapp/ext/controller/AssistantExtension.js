@@ -271,12 +271,19 @@ sap.ui.define([
                             _oRecognition.start();
                         },
 
-                        onClearChat: function () {
+                        onClearChat: async function () {
+                            // Limpar histórico no servidor
+                            try {
+                                await fetch("/ai/clearChat", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+                            } catch (e) {
+                                console.warn("[AI] Erro ao limpar histórico no servidor:", e.message);
+                            }
+                            // Limpar mensagens na UI
                             var oBox = sap.ui.getCore().byId(
                                 oView ? oView.createId("chatMessages") : "chatMessages"
                             );
                             if (oBox) { oBox.removeAllItems(); }
-                            _addMessage(oView, "Conversa limpa. Como posso ajudar?", "Information");
+                            _addMessage(oView, "Conversa reiniciada! Como posso ajudar?", "Information");
                         },
 
                         onCloseAssistant: function () {

@@ -23,9 +23,12 @@
             </Bar>
         </customHeader>
 
-        <VBox class="sapUiNoContentPadding" height="100%">
+        <VBox class="sapUiNoContentPadding" height="100%" renderType="Bare">
             <!-- Chat History -->
-            <ScrollContainer id="chatScroll" height="100%" vertical="true" class="sapUiTinyMargin">
+            <ScrollContainer id="chatScroll" vertical="true" class="sapUiTinyMargin" width="100%">
+                <layoutData>
+                    <FlexItemData growFactor="1" baseSize="0" />
+                </layoutData>
                 <VBox id="chatMessages" class="sapUiSmallMargin">
                     <MessageStrip
                         text="Olá! Sou seu assistente de logística. Diga o que precisa registrar ou use o microfone."
@@ -38,6 +41,9 @@
 
             <!-- Input Area -->
             <Toolbar class="sapUiTinyMarginTop">
+                <layoutData>
+                    <FlexItemData shrinkFactor="0" />
+                </layoutData>
                 <Input id="chatInput"
                     placeholder="Digite sua mensagem..."
                     width="100%"
